@@ -85,6 +85,18 @@ class GripperInterface:
             blocking=blocking,
         )
 
+    def stop(self):
+        """Stops the gripper, interrupting any ongoing command.
+
+        Bypasses the command queue so it reaches the server immediately,
+        even while a move or grasp is in progress.
+        Useful when the gripper is stuck trying to reach a target width
+        that is blocked by an object.
+        """
+        cmd = polymetis_pb2.GripperCommand(stop=True)
+        cmd.timestamp.GetCurrentTime()
+        self.grpc_connection.Goto(cmd)
+
     def grasp(
         self,
         speed: float,

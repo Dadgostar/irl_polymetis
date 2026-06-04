@@ -5,7 +5,7 @@
 cmake_minimum_required(VERSION 3.14)
 project(polymetis)
 
-set(CMAKE_CXX_FLAGS "-std=c++14")
+set(CMAKE_CXX_FLAGS "-std=c++17")
 set(CMAKE_CXX_FLAGS_RELEASE "-O3")
 
 add_library(protobuf::libprotobuf UNKNOWN IMPORTED)
@@ -188,6 +188,8 @@ if(BUILD_FRANKA)
     ${Franka_INCLUDE_DIRS}
   )
 
+  link_directories($ENV{CONDA_PREFIX}/lib)
+
   # Add Franka clients
   add_executable(franka_panda_client
     src/clients/franka_panda_client/franka_panda_client.cpp
@@ -197,6 +199,10 @@ if(BUILD_FRANKA)
     Franka::Franka
     yaml-cpp
     spdlog::spdlog
+    PocoNet
+    PocoFoundation
+    pinocchio
+    urdfdom_world
   )
 
   add_executable(franka_hand_client
@@ -207,6 +213,10 @@ if(BUILD_FRANKA)
     Franka::Franka
     yaml-cpp
     spdlog::spdlog
+    PocoNet
+    PocoFoundation
+    pinocchio
+    urdfdom_world
   )
 endif()
 

@@ -1,7 +1,6 @@
 # Polymetis for Newer PyTorch
 
-This is a "fork" of [Monometis](https://github.com/hengyuan-hu/monometis).
-It is further developed by the Intuitive-Learning-Robots Lab to enhance their Robot handling.
+This is a fork of [IRL Polymetis](https://github.com/intuitive-robots/irl_polymetis) by the [Intuitive-Learning-Robots Lab (IRL)](https://github.com/intuitive-robots), which is itself a fork of [Monometis](https://github.com/hengyuan-hu/monometis), originally based on [Polymetis](https://github.com/facebookresearch/fairo/tree/main/polymetis) by Facebook AI Research.
 
 ## Install & Compile
 
@@ -156,6 +155,11 @@ Note: Giovanni Sutanto contributed to the repository during his research interns
 ## Contributing
 
 See the [CONTRIBUTING](CONTRIBUTING.md) file for how to help out. [Make an issue](https://github.com/facebookresearch/fairo/issues/new/choose) for bugs and feature requests, or contribute a new robot controller by making a [pull request](https://github.com/facebookresearch/fairo/pulls)!
+
+## Acknowledgements
+
+The gripper stop feature was inspired by [facebookresearch/fairo PR #1417](https://github.com/facebookresearch/fairo/pull/1417).
+Parts of this work were developed with AI assistance.
 
 ## License
 Polymetis is MIT licensed, as found in the [LICENSE](LICENSE) file.

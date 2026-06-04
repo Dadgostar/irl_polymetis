@@ -48,7 +48,8 @@ FrankaTorqueControlClient::FrankaTorqueControlClient(
   readonly_mode_ = config["readonly"].as<bool>();
   if (!mock_franka_) {
     spdlog::info("Connecting to Franka Emika...");
-    robot_ptr_.reset(new franka::Robot(config["robot_ip"].as<std::string>()));
+    robot_ptr_.reset(new franka::Robot(config["robot_ip"].as<std::string>(),
+                                      franka::RealtimeConfig::kIgnore));
     model_ptr_.reset(new franka::Model(robot_ptr_->loadModel()));
     spdlog::info("Connected.");
   } else {

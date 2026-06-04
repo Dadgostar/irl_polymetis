@@ -1,6 +1,7 @@
 #include "polymetis/clients/franka_hand_client.hpp"
 
 #include "spdlog/spdlog.h"
+#include <franka/exception.h>
 #include <string>
 #include <thread>
 #include <time.h>
@@ -53,24 +54,34 @@ void FrankaHandClient::getGripperState(void) {
 void FrankaHandClient::applyGripperCommand(void) {
   is_moving_ = true;
 
-  if (gripper_cmd_.grasp()) {
-    spdlog::info("Grasping at width {} at speed={}", gripper_cmd_.width(),
-                 gripper_cmd_.speed());
-    double eps_inner = (gripper_cmd_.epsilon_inner() < 0)
-                           ? EPSILON_INNER
-                           : gripper_cmd_.epsilon_inner();
-    double eps_outer = (gripper_cmd_.epsilon_outer() < 0)
-                           ? EPSILON_OUTER
-                           : gripper_cmd_.epsilon_outer();
-    prev_cmd_successful_ =
-        gripper_->grasp(gripper_cmd_.width(), gripper_cmd_.speed(),
-                        gripper_cmd_.force(), eps_inner, eps_outer);
+  try {
+    if (gripper_cmd_.stop()) {
+      spdlog::info("Stopping gripper");
+      gripper_->stop();
+      prev_cmd_successful_ = true;
 
-  } else {
-    spdlog::info("Moving to width {} at speed={}", gripper_cmd_.width(),
-                 gripper_cmd_.speed());
-    prev_cmd_successful_ =
-        gripper_->move(gripper_cmd_.width(), gripper_cmd_.speed());
+    } else if (gripper_cmd_.grasp()) {
+      spdlog::info("Grasping at width {} at speed={}", gripper_cmd_.width(),
+                   gripper_cmd_.speed());
+      double eps_inner = (gripper_cmd_.epsilon_inner() < 0)
+                             ? EPSILON_INNER
+                             : gripper_cmd_.epsilon_inner();
+      double eps_outer = (gripper_cmd_.epsilon_outer() < 0)
+                             ? EPSILON_OUTER
+                             : gripper_cmd_.epsilon_outer();
+      prev_cmd_successful_ =
+          gripper_->grasp(gripper_cmd_.width(), gripper_cmd_.speed(),
+                          gripper_cmd_.force(), eps_inner, eps_outer);
+
+    } else {
+      spdlog::info("Moving to width {} at speed={}", gripper_cmd_.width(),
+                   gripper_cmd_.speed());
+      prev_cmd_successful_ =
+          gripper_->move(gripper_cmd_.width(), gripper_cmd_.speed());
+    }
+  } catch (const franka::CommandException& e) {
+    spdlog::warn("Gripper command interrupted: {}", e.what());
+    prev_cmd_successful_ = false;
   }
 
   is_moving_ = false;
@@ -91,11 +102,10 @@ void FrankaHandClient::run(void) {
     grpc::ClientContext context;
     status_ = stub_->ControlUpdate(&context, gripper_state_, &gripper_cmd_);
 
-    if (!is_moving_) {
-      // Skip if command not updated
-      timestamp_ns = gripper_cmd_.timestamp().nanos();
-      if (timestamp_ns != prev_cmd_timestamp_ns_ && timestamp_ns) {
-        // applyGripperCommand() in separate thread
+    // Stop bypasses is_moving_ so it can interrupt an ongoing command
+    timestamp_ns = gripper_cmd_.timestamp().nanos();
+    if (timestamp_ns != prev_cmd_timestamp_ns_ && timestamp_ns) {
+      if (!is_moving_ || gripper_cmd_.stop()) {
         std::thread th(&FrankaHandClient::applyGripperCommand, this);
         th.detach();
         prev_cmd_timestamp_ns_ = timestamp_ns;
