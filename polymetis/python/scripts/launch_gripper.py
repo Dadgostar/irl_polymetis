@@ -18,7 +18,9 @@ from polymetis.utils.grpc_utils import check_server_exists
 log = logging.getLogger(__name__)
 
 
-@hydra.main(config_path="../../conf", config_name="launch_gripper")
+# config_path=None: conf is provided on hydra's search path by the polymetis plugin
+# (pkg://polymetis/conf); a relative config_path breaks once installed into bin/.
+@hydra.main(config_path=None, config_name="launch_gripper")
 def main(cfg):
     log.info(f"Adding {BUILD_DIR} to $PATH")
     os.environ["PATH"] = BUILD_DIR + os.pathsep + os.environ["PATH"]
@@ -42,7 +44,9 @@ def main(cfg):
                 raise ConnectionError("Robot client: Unable to locate server.")
 
         # Run client
-        gripper_client = hydra.utils.instantiate(cfg.gripper)
+        # _recursive_=False: see launch_robot.py — clients instantiate their own
+        # nested configs; hydra >=1.1 recursive default would break that.
+        gripper_client = hydra.utils.instantiate(cfg.gripper, _recursive_=False)
         gripper_client.run()
 
 

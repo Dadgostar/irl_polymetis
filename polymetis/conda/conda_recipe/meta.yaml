@@ -15,17 +15,16 @@ requirements:
     - assimp=5.0.1=hdca8b6f_4
     - cmake
     - cpuonly
-    - cudatoolkit=11.3
     - doxygen
     - eigen=3.3.9
     - grpc-cpp ==1.41.1
-    - hpp-fcl=1.6.0=py38h75fc22a_1
+    - hpp-fcl
     - libprotobuf ==3.18.1
     - openmpi ==2.1.2
-    - pinocchio ==2.5.2
+    - pinocchio ==2.7.0
     - poco ==1.9.0 # needed by libfranka
-    - python ==3.8
-    - pytorch ==1.13.1
+    - python ==3.11
+    - pytorch ==2.4.1
     - spdlog=1.10.0=h924138e_0
     - urdfdom=2.3.3=hc9558a2_0
     - urdfdom_headers=1.0.5=hc9558a2_2
@@ -37,37 +36,32 @@ requirements:
     - boost ==1.72.0
     - boost-cpp ==1.72.0
     - breathe
-    - cudatoolkit=11.3
     - dash
     - doxygen
     - grpc-cpp ==1.41.1
-    - grpcio ==1.46.0
-    - habitat-sim=0.2.1=py3.8_bullet_linux_fc7fb11ccec407753a73ab810d1dbb5f57d0f9b9
+    - grpcio ==1.59.3
     - mujoco
-    - hydra-core ==1.0.6
-    - importlib-resources ==5.7.1
+    - hydra-core ==1.3.2
     - myst-parser
-    - numpy ==1.23.5
+    - numpy
     - openmpi ==2.1.2
     - pandas
-    - pinocchio ==2.5.2
+    - pinocchio ==2.7.0
     - pip
     - plotly
     - poco ==1.9.0 # needed by libfranka
     - protobuf
-    - pybullet ==3.17
     - pymodbus
     - pyserial
     - pytest
     - pytest-benchmark=4.0.0
-    - python ==3.8
-    - pytorch ==1.13.1
+    - python ==3.11
+    - pytorch ==2.4.1
     - scipy
     - spdlog=1.10.0=h924138e_0
     - sphinx
     - sphinx-book-theme
     - tqdm
-    - withbullet
 
 about:
   home:

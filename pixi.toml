@@ -1,0 +1,79 @@
+[workspace]
+authors = ["dadgostar <mahed.dadgostar@upc.edu>"]
+channels = ["conda-forge"]
+name = "irl_polymetis"
+platforms = ["linux-64"]
+version = "0.1.0"
+
+[activation.env]
+# The C++ .so's are built with conda's gcc 14 and need the env's newer libstdc++
+# (provides CXXABI_1.3.15); ensure it's found before the system one at runtime.
+LD_LIBRARY_PATH = "$CONDA_PREFIX/lib"
+
+[tasks]
+# Build libfranka (if needed) + C++ server + editable python install.
+# Runs inside the pixi env (CONDA_PREFIX / PATH / compilers set); cwd is
+# polymetis/ because install.sh uses paths relative to that directory.
+[tasks.build]
+cmd = "bash install.sh"
+cwd = "polymetis"
+
+# conda-forge: the C++ build/link stack (provides protoc, grpc_cpp_plugin,
+# grpc_python_plugin, cmake configs) + the scientific packages that are also
+# dependencies of the conda C++ libs (numpy/scipy/pinocchio bindings).
+[dependencies]
+python = "3.11.*"
+pip = "*"              # install.sh does `python -m pip install -e .` for the polymetis pkg
+c-compiler = "*"
+cxx-compiler = "*"
+make = "*"
+cmake = "<4"          # project + fetched googletest predate cmake 4's policy removals
+grpc-cpp = "*"        # libgrpc++ C++ dev + grpc_cpp_plugin / grpc_python_plugin
+libprotobuf = "*"     # C++ protobuf + protoc
+grpcio = "*"          # python grpc (matched to grpc-cpp)
+protobuf = "*"        # python protobuf (matched to libprotobuf)
+pinocchio = "2.7.*"   # conservative 2.x API; pulls modern urdfdom>=4
+eigen = "*"
+yaml-cpp = "0.7.*"    # keep the `yaml-cpp` cmake target (0.8 renamed it)
+spdlog = "*"
+urdfdom = "*"
+poco = "*"            # libfranka client (Poco{Net,Foundation})
+assimp = "*"
+boost = "*"
+numpy = "*"
+scipy = "*"
+pandas = "*"
+matplotlib = "*"
+
+# PyPI (via uv): torch from the CPU wheel index (pre-CXX11 ABI, matches
+# torch_isolation's _GLIBCXX_USE_CXX11_ABI=0) + pure-python runtime deps.
+[pypi-dependencies]
+torch = { version = "==2.4.1", index = "https://download.pytorch.org/whl/cpu" }
+torchvision = { version = "==0.19.1", index = "https://download.pytorch.org/whl/cpu" }
+mujoco = "*"
+hydra-core = "*"
+omegaconf = "*"
+plotly = "*"
+dash = "*"
+loguru = "*"
+rich = "*"
+tqdm = "*"
+pyserial = "*"
+pymodbus = "*"
+alephzero = "*"
+gymnasium = "*"
+
+[feature.dev.dependencies]
+pytest = "*"
+pytest-benchmark = "*"
+asv = "*"
+black = "*"
+sphinx = "*"
+sphinx-copybutton = "*"
+sphinx-book-theme = "*"
+breathe = "*"
+myst-parser = "*"
+doxygen = "*"
+
+[environments]
+dev = ["dev"]

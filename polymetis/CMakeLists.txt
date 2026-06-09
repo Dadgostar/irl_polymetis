@@ -5,16 +5,23 @@
 cmake_minimum_required(VERSION 3.14)
 project(polymetis)
 
-set(CMAKE_CXX_FLAGS "-std=c++17")
+# Use CMAKE_CXX_STANDARD (not a raw -std flag): compile-feature requirements from
+# imported targets (e.g. protobuf's cxx_std_11) can't downgrade below this, which
+# keeps protobuf 3.21+ headers (require >=C++14) compiling correctly.
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_FLAGS_RELEASE "-O3")
 
 add_library(protobuf::libprotobuf UNKNOWN IMPORTED)
+# Point at the include root, not the google/protobuf subdir: the subdir on the
+# search path lets protobuf's own endian.h shadow glibc's <endian.h> (which libc
+# headers include), causing "conflicting declaration of C function" with protobuf>=3.21.
 set_target_properties(protobuf::libprotobuf PROPERTIES
-  INTERFACE_INCLUDE_DIRECTORIES "$ENV{CONDA_PREFIX}/include/google/protobuf/")
+  INTERFACE_INCLUDE_DIRECTORIES "$ENV{CONDA_PREFIX}/include")
 set_target_properties(protobuf::libprotobuf PROPERTIES
   IMPORTED_LOCATION "$ENV{CONDA_PREFIX}/lib/libprotobuf.so")
 set_property(TARGET protobuf::libprotobuf APPEND PROPERTY
-  INTERFACE_COMPILE_FEATURES cxx_std_11
+  INTERFACE_COMPILE_FEATURES cxx_std_17
 )
 
 add_subdirectory("torch_isolation/")
@@ -32,6 +39,10 @@ find_package(yaml-cpp REQUIRED)
 
 ### eigen3
 find_package(Eigen3 REQUIRED)
+# Eigen >=3.4 config only exports the Eigen3::Eigen target, not EIGEN3_INCLUDE_DIR.
+if(NOT EIGEN3_INCLUDE_DIR)
+  get_target_property(EIGEN3_INCLUDE_DIR Eigen3::Eigen INTERFACE_INCLUDE_DIRECTORIES)
+endif()
 
 
 # Find protoc

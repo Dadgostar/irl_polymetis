@@ -6,12 +6,12 @@
 
 To run the server and robot client for Franka:
 ```bash
-launch_robot.py robot_client=bullet_sim use_real_time=false gui=[true|false]
+launch_robot.py robot_client=mujoco_sim use_real_time=false gui=[true|false]
 ```
 
-`launch_robot.py` is an executable script which starts both a controller manager server and a robot client which connects to it, and is installed as a script with the conda package by default in `$CONDA_PREFIX/bin`. It utilizes [Hydra](https://hydra.cc/) configurations to easily swap between simulation and hardware.
+`launch_robot.py` is an executable script which starts both a controller manager server and a robot client which connects to it, and is installed as a script in `$CONDA_PREFIX/bin`. It utilizes [Hydra](https://hydra.cc/) configurations to easily swap between simulation and hardware.
 
-For simulation, the `gui` option controls whether the PyBullet simulation renders, and requires an active display (i.e. you may need to use VNC if `ssh`ing).
+For simulation, the `gui` option controls whether the MuJoCo simulation renders, and requires an active display (i.e. you may need to use VNC if `ssh`ing).
 
 ## Running the server and robot client on Franka Panda hardware
 

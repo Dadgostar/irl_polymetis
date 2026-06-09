@@ -22,7 +22,10 @@ from polymetis.utils.data_dir import BUILD_DIR, which
 log = logging.getLogger(__name__)
 
 
-@hydra.main(config_path="../../conf", config_name="launch_robot")
+# config_path=None: the conf dir is provided on hydra's search path by
+# hydra_plugins/polymetis_plugin (pkg://polymetis/conf), which is robust to how/where
+# this script is installed. A relative config_path breaks once installed into bin/.
+@hydra.main(config_path=None, config_name="launch_robot")
 def main(cfg):
     log.info(f"Adding {BUILD_DIR} to $PATH")
     os.environ["PATH"] = BUILD_DIR + os.pathsep + os.environ["PATH"]
@@ -71,7 +74,10 @@ def main(cfg):
                 raise ConnectionError("Robot client: Unable to locate server.")
 
         log.info(f"Starting robot client...")
-        client = hydra.utils.instantiate(cfg.robot_client)
+        # _recursive_=False: the client classes take their nested env_cfg/metadata_cfg
+        # as DictConfigs and instantiate them themselves. Hydra >=1.1 instantiates
+        # recursively by default, which would pre-build those and break the clients.
+        client = hydra.utils.instantiate(cfg.robot_client, _recursive_=False)
         client.run()
 
     else:

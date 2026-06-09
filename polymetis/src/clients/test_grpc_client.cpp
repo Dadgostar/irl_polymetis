@@ -115,7 +115,8 @@ private:
     ClientContext context;
     Status status = stub_->ControlUpdate(&context, state_, &torque_command);
     if (!status.ok()) {
-      spdlog::error("SendCommand failed: {}", status.error_code());
+      spdlog::error("SendCommand failed: {}",
+                    static_cast<int>(status.error_code()));
       return false;
     }
     return true;

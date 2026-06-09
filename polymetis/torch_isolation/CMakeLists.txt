@@ -11,7 +11,7 @@ add_definitions(-D_GLIBCXX_USE_CXX11_ABI=0)
 
 # Find Torch
 execute_process (
-    COMMAND bash -c "python -c 'from distutils.sysconfig import get_python_lib; print(get_python_lib())' | tr -d '\n'"
+    COMMAND bash -c "python -c 'import sysconfig; print(sysconfig.get_path(\"purelib\"))' | tr -d '\n'"
     OUTPUT_VARIABLE site_packages_path
 )
 set(Torch_DIR "${site_packages_path}/torch/share/cmake/Torch/")
@@ -19,6 +19,10 @@ find_package(Torch REQUIRED)
 
 # Find Eigen
 find_package(Eigen3 REQUIRED)
+# Eigen >=3.4 config only exports the Eigen3::Eigen target, not EIGEN3_INCLUDE_DIR.
+if(NOT EIGEN3_INCLUDE_DIR)
+    get_target_property(EIGEN3_INCLUDE_DIR Eigen3::Eigen INTERFACE_INCLUDE_DIRECTORIES)
+endif()
 
 include_directories(
     "include"

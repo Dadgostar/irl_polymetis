@@ -176,3 +176,6 @@ dmypy.json
 # Vim
 *.swp
 polymetis/build.old/*
+# pixi environments
+.pixi/*
+!.pixi/config.toml

@@ -12,7 +12,7 @@ default_Kxd: [1, 1, 1, 0.2, 0.2, 0.2]
 robot_client:
   _target_: polysim.grpc_sim_client.GrpcSimulationClient
   env_cfg:
-    _target_: polysim.envs.BulletManipulatorEnv
+    _target_: polysim.envs.MujocoManipulatorEnv
     gui: ${gui}
     use_grav_comp: ${use_grav_comp}
     robot_model_cfg: ${robot_model}

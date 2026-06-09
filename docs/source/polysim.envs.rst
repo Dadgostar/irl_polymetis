@@ -18,10 +18,10 @@ polysim.envs.abstract\_env module
    :undoc-members:
    :show-inheritance:
 
-polysim.envs.bullet\_manipulator module
+polysim.envs.mujoco\_manipulator module
 -------------------------------------------------
 
-.. automodule:: polysim.envs.bullet_manipulator
+.. automodule:: polysim.envs.mujoco_manipulator
    :members:
    :undoc-members:
    :show-inheritance:

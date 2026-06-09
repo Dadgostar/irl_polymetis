@@ -15,6 +15,10 @@ endif()
 
 # Find Eigen
 find_package(Eigen3 REQUIRED)
+# Eigen >=3.4 config only exports the Eigen3::Eigen target, not EIGEN3_INCLUDE_DIR.
+if(NOT EIGEN3_INCLUDE_DIR)
+    get_target_property(EIGEN3_INCLUDE_DIR Eigen3::Eigen INTERFACE_INCLUDE_DIRECTORIES)
+endif()
 
 # Find Pinocchio
 set(pinocchio_DIR $ENV{CONDA_PREFIX}/lib/cmake/pinocchio)

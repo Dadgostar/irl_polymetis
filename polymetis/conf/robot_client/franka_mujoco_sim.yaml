@@ -1,3 +1,7 @@
+# @package _global_
+# Keys below (gui/hz/ip/default_K*) sit at the config root so the ${...}
+# interpolations resolve and CLI overrides like `gui=false` work (hydra >=1.1
+# otherwise scopes them under the robot_client group).
 ip: localhost
 hz: 240
 gui: true
