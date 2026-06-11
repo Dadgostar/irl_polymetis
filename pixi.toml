@@ -118,4 +118,5 @@ poco = "1.9.*"
 dev = ["dev"]
 planning = { features = ["planning"], no-default-feature = true }
 aio = { features = ["aio"], no-default-feature = true }
-py39 = ["py39"]
+# commented the python 3.9 in favor of 3.11
+# py39 = ["py39"] 
