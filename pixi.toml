@@ -105,15 +105,6 @@ osqp = "*"
 python = "3.11.*"
 pip = "*"
 
-# --- py3.9 compatibility env (secondary; the old environment_cpu.yml C++ stack).
-# Experimental: run `pixi install -e py39` to validate the solve before relying on it;
-# the pins below may need adjustment against conda-forge availability. ---
-[feature.py39.dependencies]
-python = "3.9.*"
-pinocchio = "2.5.*"
-eigen = "3.3.9.*"
-poco = "1.9.*"
-
 [environments]
 dev = ["dev"]
 planning = { features = ["planning"], no-default-feature = true }
