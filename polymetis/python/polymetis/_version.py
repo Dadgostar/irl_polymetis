@@ -21,9 +21,14 @@ else:
     original_cwd = os.getcwd()
     os.chdir(os.path.dirname(polymetis.__file__))
 
-    commit = [f for f in os.popen("git log -1")][0]
-    __version__ = commit.strip("\n").split()[-1]
-    print(f"version: (git) {__version__}")
+    git_lines = [f for f in os.popen("git log -1")]
+    if git_lines:
+        commit = git_lines[0]
+        __version__ = commit.strip("\n").split()[-1]
+        print(f"version: (git) {__version__}")
+    else:
+        __version__ = "unknown"
+        print("version: (no .git repo) unknown")
 
     # Reset cwd
     os.chdir(original_cwd)

@@ -86,17 +86,26 @@ doxygen = "*"
 [feature.planning.dependencies]
 python = "3.11.*"
 pip = "*"
-numpy = "*"
-scipy = "*"
-matplotlib = "*"
+# numpy/scipy/matplotlib kept in pypi-dependencies so conda's solver is not
+# involved -- pin 3.x (cmeel) wheels need numpy 2.x (EIGENPY_ARRAY_APIPyArray_RUNTIME_VERSION)
+# which conflicts with conda-forge's scipy/matplotlib ABI constraints.
 
 [feature.planning.pypi-dependencies]
+numpy = ">=2.0"      # pin 3.x eigenpy requires numpy 2.x C API
+scipy = "*"
+matplotlib = "*"
 pin = "*"            # pinocchio 3.x (pip) -- isolated from the RT env's conda pinocchio
 pin-pink = "*"       # weighted task-space IK as a QP (import: pink)
 toppra = "*"         # time-optimal path parameterization (shared-clock retiming)
 qpsolvers = "*"
 quadprog = "*"
 osqp = "*"
+
+[feature.planning.activation.env]
+# planning is a pure pip/cmeel numpy-2 stack; it must NOT inherit the RT env's
+# LD_LIBRARY_PATH=$CONDA_PREFIX/lib, whose conda eigenpy (numpy-1.x) shadows the
+# cmeel libeigenpy and breaks `import pinocchio` (undefined EIGENPY_ARRAY_API…).
+LD_LIBRARY_PATH = "$CONDA_PREFIX/lib"
 
 # --- aiofranka env (py3.11): kept separate so mujoco/ruckig/pylibfranka don't mix
 # into the polymetis stack. aiofranka itself (and its deps) is pip-installed editable
