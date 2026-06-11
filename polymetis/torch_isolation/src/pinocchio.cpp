@@ -148,6 +148,36 @@ struct RobotModelPinocchio : torch::CustomClassHolder {
     return torch::from_blob(tau.data(), dims, torch::kFloat64).clone();
   }
 
+  torch::Tensor compute_inertia(torch::Tensor joint_positions) {
+    joint_positions = validTensor(joint_positions);
+    auto q = matrixToVector(dtt::libtorch2eigen<double>(joint_positions));
+
+    Eigen::MatrixXd M = pinocchio_wrapper::compute_inertia(pinocchio_state_, q);
+    // M is symmetric (symmetrized in the wrapper), so the column-major Eigen
+    // buffer reinterpreted row-major by from_blob is still correct.
+    std::vector<int64_t> dims = {M.rows(), M.cols()};
+    return torch::from_blob(M.data(), dims, torch::kFloat64).clone();
+  }
+
+  torch::Tensor compute_jacobian_time_variation(torch::Tensor joint_positions,
+                                                torch::Tensor joint_velocities,
+                                                int64_t frame_idx) {
+    int nq = pinocchio_wrapper::get_nq(pinocchio_state_);
+    joint_positions = validTensor(joint_positions);
+    joint_velocities = validTensor(joint_velocities);
+
+    torch::Tensor result = torch::zeros({6, nq}, torch::kFloat64);
+    Eigen::Map<dtt::MatrixXrm<double>> dJ(result.data_ptr<double>(),
+                                          result.size(0), result.size(1));
+    pinocchio_wrapper::compute_jacobian_time_variation(
+        pinocchio_state_,
+        matrixToVector(dtt::libtorch2eigen<double>(joint_positions)),
+        matrixToVector(dtt::libtorch2eigen<double>(joint_velocities)), dJ,
+        frame_idx);
+
+    return result;
+  }
+
   torch::Tensor inverse_kinematics(torch::Tensor link_pos,
                                    torch::Tensor link_quat, int64_t frame_idx,
                                    torch::Tensor rest_pose, double eps = 1e-4,
@@ -192,6 +222,9 @@ TORCH_LIBRARY(torchscript_pinocchio, m) {
       .def("forward_kinematics", &RobotModelPinocchio::forward_kinematics)
       .def("compute_jacobian", &RobotModelPinocchio::compute_jacobian)
       .def("inverse_dynamics", &RobotModelPinocchio::inverse_dynamics)
+      .def("compute_inertia", &RobotModelPinocchio::compute_inertia)
+      .def("compute_jacobian_time_variation",
+           &RobotModelPinocchio::compute_jacobian_time_variation)
       .def("inverse_kinematics", &RobotModelPinocchio::inverse_kinematics)
       .def("get_link_idx_from_name",
            &RobotModelPinocchio::get_link_idx_from_name)

@@ -62,6 +62,8 @@ pyserial = "*"
 pymodbus = "*"
 alephzero = "*"
 gymnasium = "*"
+numpy-quaternion = "*"   # cloth-hub dependency (import: quaternion)
+hatchling = "*"          # cloth-hub build backend
 
 [feature.dev.dependencies]
 pytest = "*"
@@ -75,5 +77,45 @@ breathe = "*"
 myst-parser = "*"
 doxygen = "*"
 
+# --- offline trajectory-planning env (Phase 2: weighted IK + TOPP-RA retiming) ---
+# Deliberately isolated from the RT polymetis env: it uses the pip pinocchio 3.x stack
+# (pin / pin-pink / toppra), so it never clashes with the conda pinocchio 2.7 the C++
+# server links against. It only needs kinematics/IK/retiming to produce q/qd/qdd
+# trajectories offline; the RT env consumes the exported result (npz/csv). Run with:
+#   pixi run -e planning python -m robot_hub.franka.polymetis.control.trajectory_planning.plan
+[feature.planning.dependencies]
+python = "3.11.*"
+pip = "*"
+numpy = "*"
+scipy = "*"
+matplotlib = "*"
+
+[feature.planning.pypi-dependencies]
+pin = "*"            # pinocchio 3.x (pip) -- isolated from the RT env's conda pinocchio
+pin-pink = "*"       # weighted task-space IK as a QP (import: pink)
+toppra = "*"         # time-optimal path parameterization (shared-clock retiming)
+qpsolvers = "*"
+quadprog = "*"
+osqp = "*"
+
+# --- aiofranka env (py3.11): kept separate so mujoco/ruckig/pylibfranka don't mix
+# into the polymetis stack. aiofranka itself (and its deps) is pip-installed editable
+# from /opt/aiofranka in the image (Dockerfile), mirroring the old `aio` conda env. ---
+[feature.aio.dependencies]
+python = "3.11.*"
+pip = "*"
+
+# --- py3.9 compatibility env (secondary; the old environment_cpu.yml C++ stack).
+# Experimental: run `pixi install -e py39` to validate the solve before relying on it;
+# the pins below may need adjustment against conda-forge availability. ---
+[feature.py39.dependencies]
+python = "3.9.*"
+pinocchio = "2.5.*"
+eigen = "3.3.9.*"
+poco = "1.9.*"
+
 [environments]
 dev = ["dev"]
+planning = { features = ["planning"], no-default-feature = true }
+aio = { features = ["aio"], no-default-feature = true }
+py39 = ["py39"]

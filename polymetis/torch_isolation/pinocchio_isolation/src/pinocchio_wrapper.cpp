@@ -7,6 +7,7 @@
 #include <stdexcept>
 #include <string>
 
+#include "pinocchio/algorithm/crba.hpp"
 #include "pinocchio/algorithm/frames.hpp"
 #include "pinocchio/algorithm/jacobian.hpp"
 #include "pinocchio/algorithm/joint-configuration.hpp"
@@ -59,8 +60,11 @@ Eigen::VectorXd forward_kinematics(State *pinocchio_state,
                                    int64_t frame_idx) {
   pinocchio::FrameIndex frame_idx_ =
       static_cast<pinocchio::FrameIndex>(frame_idx);
-  auto model = *pinocchio_state->model;
-  auto model_data = *pinocchio_state->model_data;
+  // References (not copies): each arm owns its own State*, and copying the whole
+  // pinocchio::Model/Data every tick at 1 kHz defeats Pinocchio's caching and
+  // wastes the RT budget (osc_franka_notes.md S8.2).
+  auto &model = *pinocchio_state->model;
+  auto &model_data = *pinocchio_state->model_data;
 
   pinocchio::forwardKinematics(model, model_data, q);
   pinocchio::updateFramePlacement(model, model_data, frame_idx_);
@@ -87,19 +91,50 @@ void compute_jacobian(
     int64_t frame_idx) {
   pinocchio::FrameIndex frame_idx_ =
       static_cast<pinocchio::FrameIndex>(frame_idx);
-  auto model = *state->model;
-  auto model_data = *state->model_data;
+  auto &model = *state->model;
+  auto &model_data = *state->model_data;
   pinocchio::computeFrameJacobian(model, model_data, joint_positions,
                                   frame_idx_, pinocchio::LOCAL_WORLD_ALIGNED,
                                   J);
 }
 
+// Time-derivative of the LOCAL_WORLD_ALIGNED frame Jacobian (dJ), so OSC can
+// restore the dropped dJ*qd task-bias term for genuinely fast motion
+// (osc_franka_notes.md S8.5). Same frame as compute_jacobian, so the controller's
+// world-aligned twist convention stays consistent.
+void compute_jacobian_time_variation(
+    State *state, const Eigen::VectorXd &q, const Eigen::VectorXd &v,
+    Eigen::Map<Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic,
+                             Eigen::RowMajor>> &dJ,
+    int64_t frame_idx) {
+  pinocchio::FrameIndex frame_idx_ =
+      static_cast<pinocchio::FrameIndex>(frame_idx);
+  auto &model = *state->model;
+  auto &model_data = *state->model_data;
+  pinocchio::computeJointJacobiansTimeVariation(model, model_data, q, v);
+  pinocchio::getFrameJacobianTimeVariation(
+      model, model_data, frame_idx_, pinocchio::LOCAL_WORLD_ALIGNED, dJ);
+}
+
 Eigen::Matrix<double, Eigen::Dynamic, 1>
 inverse_dynamics(State *state, const Eigen::VectorXd &q,
                  const Eigen::VectorXd &v, const Eigen::VectorXd &a) {
-  auto model = *state->model;
-  auto model_data = *state->model_data;
+  auto &model = *state->model;
+  auto &model_data = *state->model_data;
   return pinocchio::rnea(model, model_data, q, v, a);
+}
+
+// Joint-space inertia matrix M(q) via the Composite Rigid Body Algorithm.
+// CRBA fills only the upper triangle of data.M, so mirror it into the lower
+// triangle to return the full symmetric (nv, nv) matrix. One CRBA call replaces
+// the OSC controller's 8-RNEA probe (osc_franka_notes.md S8.3).
+Eigen::MatrixXd compute_inertia(State *state, const Eigen::VectorXd &q) {
+  auto &model = *state->model;
+  auto &model_data = *state->model_data;
+  pinocchio::crba(model, model_data, q);
+  model_data.M.triangularView<Eigen::StrictlyLower>() =
+      model_data.M.transpose().triangularView<Eigen::StrictlyLower>();
+  return model_data.M;
 }
 
 void inverse_kinematics(State *state, const Eigen::Vector3d &link_pos,
@@ -108,8 +143,8 @@ void inverse_kinematics(State *state, const Eigen::Vector3d &link_pos,
                         int64_t max_iters, double dt, double damping) {
   pinocchio::FrameIndex frame_idx_ =
       static_cast<pinocchio::FrameIndex>(frame_idx);
-  auto model = *state->model;
-  auto model_data = *state->model_data;
+  auto &model = *state->model;
+  auto &model_data = *state->model_data;
   auto ik_sol_v = state->ik_sol_v;
   auto ik_sol_J = state->ik_sol_J;
 

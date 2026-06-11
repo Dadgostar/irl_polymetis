@@ -142,6 +142,33 @@ class RobotModelPinocchio(torch.nn.Module):
             joint_positions, joint_velocities, joint_accelerations
         ).to(joint_positions)
 
+    def compute_inertia(self, joint_positions: torch.Tensor) -> torch.Tensor:
+        """Computes the joint-space inertia matrix M(q) via CRBA.
+
+        Returns:
+            torch.Tensor: the (dof, dof) symmetric, positive-definite inertia matrix.
+        """
+        return self.model.compute_inertia(joint_positions).to(joint_positions)
+
+    def compute_jacobian_time_variation(
+        self,
+        joint_positions: torch.Tensor,
+        joint_velocities: torch.Tensor,
+        link_name: str = "",
+    ) -> torch.Tensor:
+        """Computes the time-derivative dJ of the link-frame Jacobian.
+
+        Same LOCAL_WORLD_ALIGNED frame as ``compute_jacobian``; ``dJ @ qd`` is the
+        task-space bias OSC drops by default and can restore for fast motion.
+
+        Returns:
+            torch.Tensor: the (6, dof) Jacobian time-variation.
+        """
+        frame_idx = self._get_link_idx_or_use_ee(link_name)
+        return self.model.compute_jacobian_time_variation(
+            joint_positions, joint_velocities, frame_idx
+        ).to(joint_positions)
+
     def inverse_kinematics(
         self,
         link_pos: torch.Tensor,

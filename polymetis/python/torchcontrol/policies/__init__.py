@@ -5,3 +5,7 @@
 from .impedance import *
 from .trajectory import *
 from .velocity import *
+from .osc_executors import (
+    JointTrajectoryComputedTorque,
+    OperationalSpaceTrajectoryExecutor,
+)

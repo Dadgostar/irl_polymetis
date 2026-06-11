@@ -38,6 +38,13 @@ compute_jacobian(State *state, const Eigen::VectorXd &joint_positions,
 C_TORCH_EXPORT Eigen::Matrix<double, Eigen::Dynamic, 1>
 inverse_dynamics(State *state, const Eigen::VectorXd &q,
                  const Eigen::VectorXd &v, const Eigen::VectorXd &a);
+C_TORCH_EXPORT Eigen::MatrixXd compute_inertia(State *state,
+                                               const Eigen::VectorXd &q);
+C_TORCH_EXPORT void compute_jacobian_time_variation(
+    State *state, const Eigen::VectorXd &q, const Eigen::VectorXd &v,
+    Eigen::Map<Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic,
+                             Eigen::RowMajor>> &dJ,
+    int64_t frame_idx);
 
 C_TORCH_EXPORT void
 inverse_kinematics(State *state, const Eigen::Vector3d &link_pos,
