@@ -5,7 +5,5 @@
 from .impedance import *
 from .trajectory import *
 from .velocity import *
-from .osc_executors import (
-    JointTrajectoryComputedTorque,
-    OperationalSpaceTrajectoryExecutor,
-)
+# NOTE: OperationalSpaceTrajectoryExecutor / JointTrajectoryComputedTorque moved
+# in-tree to robot_hub.franka.polymetis.control.controllers (no longer vendored here).
