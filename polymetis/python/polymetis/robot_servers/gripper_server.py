@@ -44,12 +44,25 @@ class PolymetisGripperServer(polymetis_pb2_grpc.GripperServerServicer):
 class GripperServerLauncher:
     def __init__(self, ip="localhost", port="50052"):
         self.address = f"{ip}:{port}"
-        self.server = grpc.server(futures.ThreadPoolExecutor(max_workers=2))
+        # so_reuseport=0: gRPC's default SO_REUSEPORT lets a SECOND server bind the
+        # same port, silently load-balancing client connections between old and new
+        # processes -- commands then intermittently land in a cache no hand client
+        # polls (grasps work, opens vanish, width reads 0). Disable it so a stale
+        # server makes a relaunch FAIL LOUDLY here instead.
+        self.server = grpc.server(
+            futures.ThreadPoolExecutor(max_workers=2),
+            options=[("grpc.so_reuseport", 0)],
+        )
 
         polymetis_pb2_grpc.add_GripperServerServicer_to_server(
             PolymetisGripperServer(), self.server
         )
-        self.server.add_insecure_port(self.address)
+        if self.server.add_insecure_port(self.address) == 0:
+            raise SystemExit(
+                f"[gripper-server] could not bind {self.address} -- another gripper "
+                f"server is already running on this port. Kill it first "
+                f"(pkill -f 'launch_gripper.*{port}') and relaunch."
+            )
 
     def run(self):
         self.server.start()
